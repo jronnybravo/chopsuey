@@ -1,8 +1,8 @@
 {
     "name": "chopsuey",
-    "version": "0.0.2",
+    "version": "0.0.4",
     "description": "Combinatorics: subsets, permutations, etc.",
-    "main": "lib/ChopSuey.ts",
+    "main": "lib/ChopSuey.js",
     "types": "lib/ChopSuey.d.ts",
     "scripts": {
         "test": "jest --config jestconfig.json",
@@ -45,3 +45,5 @@
         "lib/**/*"
     ]
 }
+
+

@@ -1,8 +1,8 @@
 export class ChopSuey {
-    static *generateSubsets<T>(elements: T[], offset: number = 0): Generator<T[], void, void> {
+    static *generateSubsets<T>(elements: T[], length: number|null = null, offset: number = 0): Generator<T[], void, void> {
         while (offset < elements.length) {
             const first = elements[offset++];
-            for (const subset of this.generateSubsets(elements, offset)) {
+            for (const subset of this.generateSubsets(elements, length, offset)) {
                 subset.push(first);
                 yield subset;
             }
