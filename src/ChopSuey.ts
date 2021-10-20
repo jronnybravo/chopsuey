@@ -132,5 +132,3 @@ export class ChopSuey {
         return copy;
     }
 }
-
-console.log(ChopSuey.getPermutations([1, 2, 3, 4], 3, false));
