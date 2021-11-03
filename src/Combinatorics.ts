@@ -1,13 +1,13 @@
 import Utils from './Utils';
 
 export default class Combinatorics {
-    private static validateLengthParameter(elements, length) {
+    private static validateLengthParameter<T>(elements: T[], length: number): void {
         if (length < 1 || length > elements.length) {
             throw new RangeError('`length` parameter should be between 1 and the length of the `elements`');
         }
     }
 
-    public static *generateSubsets<T>(elements: T[], distinct: boolean = false): IterableIterator<T[]> {
+    static *generateSubsets<T>(elements: T[], distinct: boolean = false): IterableIterator<T[]> {
         return yield* (function* generator(offset: number = 0): IterableIterator<T[]> {
             const yieldedResults: T[][] = [];
             while (offset < elements.length) {
@@ -26,7 +26,7 @@ export default class Combinatorics {
         })();
     }
 
-    public static *generateCombinations<T>(
+    static *generateCombinations<T>(
         elements: T[],
         length: number,
         distinct: boolean = false,
@@ -64,7 +64,7 @@ export default class Combinatorics {
         })(length);
     }
 
-    public static *generatePermutations<T>(
+    static *generatePermutations<T>(
         elements: T[],
         length: number = elements.length,
         allowRepetitions: boolean = false,
@@ -87,7 +87,7 @@ export default class Combinatorics {
         return yield* this.generateHeapsPermutations(elements);
     }
 
-    public static *generatePermutationsWithRepetitions<T>(
+    static *generatePermutationsWithRepetitions<T>(
         elements: T[],
         length: number = elements.length,
         distinct: boolean = false,
@@ -95,113 +95,140 @@ export default class Combinatorics {
         if (distinct) {
             elements = [...new Set(elements)];
         }
+        this.validateLengthParameter(elements, length);
 
-        const indices = Array(length).fill(0);
-        const loadNextIndexSet = (i: number = indices.length - 1): boolean => {
-            if (++indices[i] === elements.length) {
-                indices[i] = 0;
-                if (i === 0 || !loadNextIndexSet(i - 1)) {
+        const copyElements = Array(length).fill(elements[0]);
+        const stateIndices = Array(length).fill(0);
+        const loadNextPermutation = (i: number = stateIndices.length - 1): boolean => {
+            if (++stateIndices[i] === elements.length) {
+                stateIndices[i] = 0;
+                if (i === 0 || !loadNextPermutation(i - 1)) {
                     return false;
                 }
             }
+            copyElements[i] = elements[stateIndices[i]];
             return true;
         };
 
         do {
-            yield indices.map((i) => elements[i]);
-        } while (loadNextIndexSet());
+            yield copyElements.slice();
+        } while (loadNextPermutation());
     }
 
-    public static *generateDistinctPermutations<T>(elements: T[]): IterableIterator<T[]> {
+    static *generateDistinctPermutations<T>(elements: T[]): IterableIterator<T[]> {
         const hasDuplicates = new Set(elements).size !== elements.length;
         if (!hasDuplicates) {
             return yield* this.generateHeapsPermutations(elements);
         }
 
-        elements = elements.slice().sort();
-
-        function nextPermutation() {
-            const reversedIndices: number[] = [...Array(elements.length).keys()].reverse();
-
-            const i = reversedIndices.slice(1).find((a) => elements[a] < elements[a + 1]);
-
-            if (i === undefined) {
-                elements.reverse();
-                return false;
-            } else {
-                const j: number = reversedIndices.find((a) => elements[i] < elements[a]) || i;
-                [elements[i], elements[j]] = [elements[j], elements[i]];
-
-                const start = i + 1;
-                if (start === 0) {
-                    elements.reverse();
-                } else {
-                    let left = start;
-                    let right = elements.length - 1;
-
-                    while (left++ < right--) {
-                        [elements[left], elements[right]] = [elements[right], elements[left]];
-                    }
-                }
+        const copyElements = elements.slice();
+        return yield* (function* generator(length = copyElements.length): IterableIterator<T[]> {
+            if (length === 1) {
+                yield copyElements.slice();
             }
+            for (let i = 0; i < length; i++) {
+                let subsetLength = length - 1;
 
-            return true;
-        }
+                yield* generator(subsetLength);
 
-        do {
-            yield elements.slice();
-        } while (nextPermutation());
+                const j = length % 2 ? i : 0;
+                [copyElements[j], copyElements[subsetLength]] = [copyElements[subsetLength], copyElements[j]];
+            }
+        })();
+
+        
+
+        // const map = new Map();
+        // elements.forEach((a) => map.set(a, map.has(a) ? map.get(a) + 1 : 1));
+        // map.forEach((v, k) => {
+        //     copyElements.push(...Array(v).fill(k));
+        //     map.set(k, copyElements.length);
+        // });
+
+        // const reversedStateIndices = [...Array(copyElements.length).keys()].reverse();
+        // function loadNextPermutation() {
+        //     const i = reversedStateIndices
+        //         .slice(1)
+        //         .find((a) => map.get(copyElements[a]) < map.get(copyElements[a + 1]));
+
+        //     if (i !== undefined) {
+        //         const j: number =
+        //             reversedStateIndices.find((a) => map.get(copyElements[i]) < map.get(copyElements[a])) || i;
+
+        //         [copyElements[i], copyElements[j]] = [copyElements[j], copyElements[i]];
+
+        //         const start = i + 1;
+        //         if (start === 0) {
+        //             copyElements.reverse();
+        //         } else {
+        //             let left = start;
+        //             let right = copyElements.length - 1;
+
+        //             while (left++ < right--) {
+        //                 [copyElements[left], copyElements[right]] = [copyElements[right], copyElements[left]];
+        //             }
+        //         }
+        //     } else {
+        //         return false;
+        //     }
+
+        //     return true;
+        // }
+
+        // do {
+        //     yield copyElements.slice();
+        // } while (loadNextPermutation());
     }
 
     // https://en.wikipedia.org/wiki/Heap%27s_algorithm
-    public static *generateHeapsPermutations<T>(elements: T[]): IterableIterator<T[]> {
-        elements = elements.slice();
+    static *generateHeapsPermutations<T>(elements: T[]): IterableIterator<T[]> {
+        const copyElements = elements.slice();
 
-        yield elements.slice();
-
-        const stackState = Array(elements.length).fill(0);
-
+        const stack = Array(copyElements.length).fill(0);
         let i = 1;
-        while (i < elements.length) {
-            if (stackState[i] < i) {
-                const j = i % 2 && stackState[i];
-                [elements[i], elements[j]] = [elements[j], elements[i]];
+        const loadNextPermutation = () => {
+            while (i < copyElements.length) {
+                if (stack[i] < i) {
+                    const j = i % 2 && stack[i];
+                    [copyElements[i], copyElements[j]] = [copyElements[j], copyElements[i]];
 
-                stackState[i]++;
-                i = 1;
+                    stack[i]++;
+                    i = 1;
 
-                yield elements.slice();
-            } else {
-                stackState[i] = 0;
-                i++;
+                    return true;
+                } else {
+                    stack[i] = 0;
+                    i++;
+                }
             }
-        }
+            return false;
+        };
+
+        do {
+            yield copyElements.slice();
+        } while (loadNextPermutation());
     }
 
     // https://www.statlect.com/mathematical-tools/k-permutations
-    public static *generateKPermutations<T>(
+    static *generateKPermutations<T>(
         elements: T[],
         length: number,
         distinct: boolean = false,
     ): IterableIterator<T[]> {
         for (const subset of this.generateCombinations(elements, length, distinct)) {
-            if (distinct) {
-                yield* this.generateDistinctPermutations(subset);
-            } else {
-                yield* this.generateHeapsPermutations(subset);
-            }
+            yield* this.generatePermutations(subset, subset.length, false, distinct);
         }
     }
 
-    public static getRandomSubset<T>(elements: T[]): T[] {
-        const length = Math.floor( Math.random() * ( 1 + elements.length - 0 ) ) + 0;
-        if(length === 0) {
+    static getRandomSubset<T>(elements: T[]): T[] {
+        const length = Math.floor(Math.random() * (1 + elements.length - 0)) + 0;
+        if (length === 0) {
             return [];
         }
         return this.getRandomCombination(elements, length);
     }
 
-    public static getRandomCombination<T>(elements: T[], length: number): T[] {
+    static getRandomCombination<T>(elements: T[], length: number): T[] {
         this.validateLengthParameter(elements, length);
 
         elements = elements.slice();
@@ -212,7 +239,7 @@ export default class Combinatorics {
         return elements.slice(0, length);
     }
 
-    public static getRandomPermutation<T>(
+    static getRandomPermutation<T>(
         elements: T[],
         length: number = elements.length,
         allowRepetitions: boolean = false,

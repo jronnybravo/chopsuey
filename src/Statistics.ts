@@ -1,30 +1,35 @@
 export default class Statistics {
-    public static getSum<T>(elements: T[]): number {
-        const numberElements: number[] = elements.map(a => Number(a));
-        if(!numberElements.some(a => isNaN(a))) {
-            return numberElements.reduce((a, b) => a + b, 0);    
+    private static getNumberElements<T>(elements: T[], numberConversionCallback: (a: T) => number): number[] {
+        const numberElements: number[] = elements.map((a) => numberConversionCallback(a));
+        if (numberElements.some((a) => isNaN(a))) {
+            throw new TypeError('`elements` parameter should be all of type `number`');
         }
-        return 0;
+        return numberElements;
     }
 
-    public static getMean(elements: T[]): number {
-        const numberElements: number[] = elements.map(a => Number(a));
-        if(!numberElements.some(a => isNaN(a))) {
-            
-        }
-        if (elements.length) {
-            return this.getSum(elements) / elements.length;
+    public static getSum<T>(elements: T[], numberConversionCallback: (a: T) => number = (a) => Number(a)): number {
+        const numberELements = this.getNumberElements(elements, numberConversionCallback);
+        return numberELements.reduce((a, b) => a + b, 0);
+    }
+
+    public static getMean<T>(elements: T[], numberConversionCallback: (a: T) => number = (a) => Number(a)): number {
+        const numberELements = this.getNumberElements(elements, numberConversionCallback);
+
+        if (numberELements.length) {
+            return this.getSum(numberELements) / numberELements.length;
         }
         return NaN;
     }
 
-    public static getModes<T>(elements: T[]): T[] {
+    public static getModes<T>(elements: T[], baseConversionCallback: (a: T) => T = (a) => a): T[] {
+        const baseConvertedElements = elements.map((a) => baseConversionCallback(a));
+
         const map = new Map();
 
         let maxFrequency = 0;
         let modes: T[] = [];
 
-        for (const element of elements) {
+        for (const element of baseConvertedElements) {
             const frequency = map.has(element) ? map.get(element) + 1 : 1;
             if (frequency > maxFrequency) {
                 maxFrequency = frequency;
@@ -39,9 +44,14 @@ export default class Statistics {
         return isDistributionDistinct ? modes : [];
     }
 
-    public static getMedian(elements: number[]): number | undefined {
-        if (elements.length) {
-            const sorted = elements.slice().sort((a, b) => a - b);
+    public static getMedian<T>(
+        elements: T[],
+        numberConversionCallback: (a: T) => number = (a) => Number(a),
+    ): number | undefined {
+        const numberELements = this.getNumberElements(elements, numberConversionCallback);
+
+        if (numberELements.length) {
+            const sorted = numberELements.slice().sort((a, b) => a - b);
             const middle = Math.floor(sorted.length / 2);
 
             if (sorted.length % 2 === 0) {

@@ -1,4 +1,5 @@
 import Combinatorics from './Combinatorics';
+import Statistics from './Statistics';
 
 export default class ChopSuey<T> {
     private elements: T[];
@@ -7,31 +8,34 @@ export default class ChopSuey<T> {
         this.elements = elements;
     }
 
-    public *generateSubsets(distinct: boolean = false): IterableIterator<T[]> {
+    /**
+     * @returns generator
+     */
+    *generateSubsets(distinct: boolean = false): IterableIterator<T[]> {
         return yield* Combinatorics.generateSubsets(this.elements, distinct);
     }
 
-    public getSubsets(distinct: boolean = false): T[][] {
+    getSubsets(distinct: boolean = false): T[][] {
         return [...this.generateSubsets(distinct)];
     }
 
-    public getRandomSubset() {
+    getRandomSubset() {
         return Combinatorics.getRandomSubset(this.elements);
     }
 
-    public *generateCombinations(length: number, distinct: boolean = false): IterableIterator<T[]> {
+    *generateCombinations(length: number, distinct: boolean = false): IterableIterator<T[]> {
         return yield* Combinatorics.generateCombinations(this.elements, length, distinct);
     }
 
-    public getCombinations(length: number, distinct: boolean = false): T[][] {
+    getCombinations(length: number, distinct: boolean = false): T[][] {
         return [...this.generateCombinations(length, distinct)];
     }
 
-    public getRandomCombination(length: number): T[] {
+    getRandomCombination(length: number): T[] {
         return Combinatorics.getRandomCombination(this.elements, length);
     }
 
-    public *generatePermutations(
+    *generatePermutations(
         length: number = this.elements.length,
         allowRepetitions: boolean = false,
         distinct: boolean = false,
@@ -39,7 +43,7 @@ export default class ChopSuey<T> {
         return yield* Combinatorics.generatePermutations(this.elements, length, allowRepetitions, distinct);
     }
 
-    public getPermutations(
+    getPermutations(
         length: number = this.elements.length,
         allowRepetitions: boolean = false,
         distinct: boolean = false,
@@ -47,14 +51,23 @@ export default class ChopSuey<T> {
         return [...this.generatePermutations(length, allowRepetitions, distinct)];
     }
 
-    public getRandomPermutation<T>(
-        length: number = elements.length,
-        allowRepetitions: boolean = false,
-    ): T[] {
+    getRandomPermutation(length: number = this.elements.length, allowRepetitions: boolean = false): T[] {
         return Combinatorics.getRandomPermutation(this.elements, length, allowRepetitions);
     }
 
-    public getSum(): number {
+    getSum(numberConversionCallback: (a: T) => number = (a) => Number(a)): number {
+        return Statistics.getSum(this.elements, numberConversionCallback);
+    }
 
+    getMean(numberConversionCallback: (a: T) => number = (a) => Number(a)): number {
+        return Statistics.getMean(this.elements, numberConversionCallback);
+    }
+
+    getMedian(numberConversionCallback: (a: T) => number = (a) => Number(a)): number | undefined {
+        return Statistics.getMedian(this.elements, numberConversionCallback);
+    }
+
+    getModes(baseConversionCallback: (a: T) => T = (a) => a): T[] {
+        return Statistics.getModes(this.elements, baseConversionCallback);
     }
 }

@@ -122,12 +122,10 @@ import Utils from '../Utils';
     }
 })();
 
-const x = [1, 2, 3, 1];
-// const cs = new ChopSuey(x);
-// console.log([...cs.generateSubsets()]);
+const a = { a: 1 };
+const b = { b: 1 };
+// const array = [9, a, 'world', null, undefined, -1, '11', a, '22', 'hello', Infinity, -Infinity, b, -1, undefined, 0, 11];
 
-console.log([...Combinatorics.generatePermutations(x)]);
-// for(const g of Combinatorics.generateSubsets(x)) {
-//     console.log(g);
-// }
-console.log(x);
+const array = [1, 2, 3, 4, 5];
+console.log([...Combinatorics.generateHeapsPermutations(array)]);
+console.log([...Combinatorics.generateDistinctPermutations(array)]);
