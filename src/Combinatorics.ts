@@ -121,63 +121,42 @@ export default class Combinatorics {
             return yield* this.generateHeapsPermutations(elements);
         }
 
-        const copyElements = elements.slice();
-        return yield* (function* generator(length = copyElements.length): IterableIterator<T[]> {
-            if (length === 1) {
-                yield copyElements.slice();
+        const copyElements: T[] = [];
+
+        const map = new Map;
+        elements.forEach(a => map.set(a, map.has(a) ? map.get(a) + 1: 1));
+        for(const [k, v] of map.entries()) {
+            copyElements.push(...Array(v).fill(k));
+            map.set(k, copyElements.length);
+        }
+
+        const reversedStateIndices = [...Array(copyElements.length).keys()].reverse();
+        function loadNextPermutation() {
+            const i = reversedStateIndices.slice(1).find(i => map.get(copyElements[i]) < map.get(copyElements[i + 1]));
+            if (i === undefined) {
+                return false;
             }
-            for (let i = 0; i < length; i++) {
-                let subsetLength = length - 1;
+            const j = reversedStateIndices.find(j => map.get(copyElements[i]) < map.get(copyElements[j])) || i;
+            [copyElements[i], copyElements[j]] = [copyElements[j], copyElements[i]];
 
-                yield* generator(subsetLength);
+            if (i === -1) {
+                copyElements.reverse();
+            } else {
+                let left = i + 1;
+                let right = copyElements.length - 1;
 
-                const j = length % 2 ? i : 0;
-                [copyElements[j], copyElements[subsetLength]] = [copyElements[subsetLength], copyElements[j]];
+                while (left < right) {
+                    [copyElements[left], copyElements[right]] = [copyElements[right], copyElements[left]];
+                    left++; right--;
+                }
             }
-        })();
 
-        
+            return true;
+        }
 
-        // const map = new Map();
-        // elements.forEach((a) => map.set(a, map.has(a) ? map.get(a) + 1 : 1));
-        // map.forEach((v, k) => {
-        //     copyElements.push(...Array(v).fill(k));
-        //     map.set(k, copyElements.length);
-        // });
-
-        // const reversedStateIndices = [...Array(copyElements.length).keys()].reverse();
-        // function loadNextPermutation() {
-        //     const i = reversedStateIndices
-        //         .slice(1)
-        //         .find((a) => map.get(copyElements[a]) < map.get(copyElements[a + 1]));
-
-        //     if (i !== undefined) {
-        //         const j: number =
-        //             reversedStateIndices.find((a) => map.get(copyElements[i]) < map.get(copyElements[a])) || i;
-
-        //         [copyElements[i], copyElements[j]] = [copyElements[j], copyElements[i]];
-
-        //         const start = i + 1;
-        //         if (start === 0) {
-        //             copyElements.reverse();
-        //         } else {
-        //             let left = start;
-        //             let right = copyElements.length - 1;
-
-        //             while (left++ < right--) {
-        //                 [copyElements[left], copyElements[right]] = [copyElements[right], copyElements[left]];
-        //             }
-        //         }
-        //     } else {
-        //         return false;
-        //     }
-
-        //     return true;
-        // }
-
-        // do {
-        //     yield copyElements.slice();
-        // } while (loadNextPermutation());
+        do {
+            yield copyElements.slice();
+        } while (loadNextPermutation());
     }
 
     // https://en.wikipedia.org/wiki/Heap%27s_algorithm
