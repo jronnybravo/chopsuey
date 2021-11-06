@@ -26,11 +26,7 @@ export default class Combinatorics {
         })();
     }
 
-    static *generateCombinations<T>(
-        elements: T[],
-        length: number,
-        distinct: boolean = false,
-    ): IterableIterator<T[]> {
+    static *generateCombinations<T>(elements: T[], length: number, distinct: boolean = false): IterableIterator<T[]> {
         this.validateLengthParameter(elements, length);
 
         return yield* (function* generator(limit: number, offset: number = 0): IterableIterator<T[]> {
@@ -123,35 +119,33 @@ export default class Combinatorics {
 
         const copyElements: T[] = [];
 
-        const map = new Map;
-        elements.forEach(a => map.set(a, map.has(a) ? map.get(a) + 1: 1));
-        for(const [k, v] of map.entries()) {
+        const map = new Map();
+        elements.forEach((a) => map.set(a, map.has(a) ? map.get(a) + 1 : 1));
+        for (const [k, v] of map.entries()) {
             copyElements.push(...Array(v).fill(k));
             map.set(k, copyElements.length);
         }
 
-        const reversedStateIndices = [...Array(copyElements.length).keys()].reverse();
-        function loadNextPermutation() {
-            const i = reversedStateIndices.slice(1).find(i => map.get(copyElements[i]) < map.get(copyElements[i + 1]));
-            if (i === undefined) {
-                return false;
-            }
-            const j = reversedStateIndices.find(j => map.get(copyElements[i]) < map.get(copyElements[j])) || i;
-            [copyElements[i], copyElements[j]] = [copyElements[j], copyElements[i]];
+        const jIndices = [...Array(copyElements.length).keys()].reverse();
+        const iIndices = jIndices.slice(1);
+        const loadNextPermutation = () => {
+            const i = iIndices.find((i) => map.get(copyElements[i]) < map.get(copyElements[i + 1]));
+            if (i !== undefined) {
+                const j = jIndices.find((j) => map.get(copyElements[i]) < map.get(copyElements[j])) || i;
+                [copyElements[i], copyElements[j]] = [copyElements[j], copyElements[i]];
 
-            if (i === -1) {
-                copyElements.reverse();
-            } else {
                 let left = i + 1;
                 let right = copyElements.length - 1;
 
                 while (left < right) {
                     [copyElements[left], copyElements[right]] = [copyElements[right], copyElements[left]];
-                    left++; right--;
+                    left++;
+                    right--;
                 }
-            }
 
-            return true;
+                return true;
+            }
+            return false;
         }
 
         do {
@@ -189,11 +183,7 @@ export default class Combinatorics {
     }
 
     // https://www.statlect.com/mathematical-tools/k-permutations
-    static *generateKPermutations<T>(
-        elements: T[],
-        length: number,
-        distinct: boolean = false,
-    ): IterableIterator<T[]> {
+    static *generateKPermutations<T>(elements: T[], length: number, distinct: boolean = false): IterableIterator<T[]> {
         for (const subset of this.generateCombinations(elements, length, distinct)) {
             yield* this.generatePermutations(subset, subset.length, false, distinct);
         }
