@@ -126,6 +126,6 @@ const a = { a: 1 };
 const b = { b: 1 };
 // const array = [9, a, 'world', null, undefined, -1, '11', a, '22', 'hello', Infinity, -Infinity, b, -1, undefined, 0, 11];
 
-const array = [1, 2, 3, 4, 5];
+const array = [1, 2, 3, 1];
 console.log([...Combinatorics.generateHeapsPermutations(array)]);
 console.log([...Combinatorics.generateDistinctPermutations(array)]);
