@@ -1,12 +1,32 @@
 import Utils from './Utils';
 
 export default class Combinatorics {
-    private static validateLengthParameter<T>(elements: T[], length: number): void {
+
+    /**
+     * Checks if the `length` parameter is between 1 and the number of `elements`
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     * @param length To be checked with the number of elements for validation
+     * @param errorMessage Customizable error message if the validation fails
+     */
+    private static validateLengthParameter<T>(
+        elements: T[],
+        length: number,
+        errorMessage: string = '`length` parameter should be between 1 and the number of `elements`',
+    ): void {
         if (length < 1 || length > elements.length) {
-            throw new RangeError('`length` parameter should be between 1 and the length of the `elements`');
+            throw new RangeError(errorMessage);
         }
     }
 
+    /**
+     * Generator function to yield all the subsets of the set of `elements`
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     * @param distinct Determines whether the desired outputs shall all be distinct from each other or not
+     */
     static *generateSubsets<T>(elements: T[], distinct: boolean = false): IterableIterator<T[]> {
         return yield* (function* generator(offset: number = 0): IterableIterator<T[]> {
             const yieldedResults: T[][] = [];
@@ -26,6 +46,14 @@ export default class Combinatorics {
         })();
     }
 
+    /**
+     * Generator function to yield all the combinations of the set of `elements`, given the `length`
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     * @param length Desired number of elements per combination
+     * @param distinct Determines whether the desired outputs shall all be distinct from each other or not
+     */
     static *generateCombinations<T>(elements: T[], length: number, distinct: boolean = false): IterableIterator<T[]> {
         this.validateLengthParameter(elements, length);
 
@@ -60,6 +88,15 @@ export default class Combinatorics {
         })(length);
     }
 
+    /**
+     * Generator function to yield all the permutations of the set of `elements`
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     * @param length Desired number of elements per k-permutation
+     * @param allowRepetitions Determines whether to generate permutations with repetitions allowed or not
+     * @param distinct Determines whether the desired outputs shall all be distinct from each other or not
+     */
     static *generatePermutations<T>(
         elements: T[],
         length: number = elements.length,
@@ -83,15 +120,29 @@ export default class Combinatorics {
         return yield* this.generateHeapsPermutations(elements);
     }
 
+    /**
+     * Generator function to yield all the permutations of the set of `elements` with repetitions allowed
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     * @param length Desired number of elements per k-permutation
+     * @param distinct Determines whether the desired outputs shall all be distinct from each other or not
+     */
     static *generatePermutationsWithRepetitions<T>(
         elements: T[],
         length: number = elements.length,
         distinct: boolean = false,
     ): IterableIterator<T[]> {
+        this.validateLengthParameter(elements, length);
+
         if (distinct) {
             elements = [...new Set(elements)];
+            this.validateLengthParameter(
+                elements,
+                length,
+                '`length` parameter should be between 1 and the number of distinct `elements`',
+            );
         }
-        this.validateLengthParameter(elements, length);
 
         const copyElements = Array(length).fill(elements[0]);
         const stateIndices = Array(length).fill(0);
@@ -111,6 +162,12 @@ export default class Combinatorics {
         } while (loadNextPermutation());
     }
 
+    /**
+     * Generator function to yield all the distinct permutations of the set of `elements`
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     */
     static *generateDistinctPermutations<T>(elements: T[]): IterableIterator<T[]> {
         const hasDuplicates = new Set(elements).size !== elements.length;
         if (!hasDuplicates) {
@@ -119,8 +176,7 @@ export default class Combinatorics {
 
         const copyElements: T[] = [];
 
-        const map = new Map();
-        elements.forEach((a) => map.set(a, map.has(a) ? map.get(a) + 1 : 1));
+        const map = elements.reduce((map, val) => map.set(val, 1 + (map.get(val) || 0)), new Map());
         for (const [k, v] of map.entries()) {
             copyElements.push(...Array(v).fill(k));
             map.set(k, copyElements.length);
@@ -146,14 +202,20 @@ export default class Combinatorics {
                 return true;
             }
             return false;
-        }
+        };
 
         do {
             yield copyElements.slice();
         } while (loadNextPermutation());
     }
 
-    // https://en.wikipedia.org/wiki/Heap%27s_algorithm
+    /**
+     * Generator function to yield all the permutations of the set of `elements` using Heap's Algorithm
+     * https://en.wikipedia.org/wiki/Heap%27s_algorithm
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     */
     static *generateHeapsPermutations<T>(elements: T[]): IterableIterator<T[]> {
         const copyElements = elements.slice();
 
@@ -164,7 +226,6 @@ export default class Combinatorics {
                 if (stack[i] < i) {
                     const j = i % 2 && stack[i];
                     [copyElements[i], copyElements[j]] = [copyElements[j], copyElements[i]];
-
                     stack[i]++;
                     i = 1;
 
@@ -182,21 +243,39 @@ export default class Combinatorics {
         } while (loadNextPermutation());
     }
 
-    // https://www.statlect.com/mathematical-tools/k-permutations
+    /**
+     * Generator function to yield all the k-permutations of the set of `elements` where k is the `length`
+     * https://www.statlect.com/mathematical-tools/k-permutations
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     * @param length Desired length per k-permutation
+     * @param distinct Determines whether the desired outputs shall all be distinct from each other or not
+     */
     static *generateKPermutations<T>(elements: T[], length: number, distinct: boolean = false): IterableIterator<T[]> {
         for (const subset of this.generateCombinations(elements, length, distinct)) {
             yield* this.generatePermutations(subset, subset.length, false, distinct);
         }
     }
 
+    /**
+     * Get any random subset from the set of `elements`
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     */
     static getRandomSubset<T>(elements: T[]): T[] {
         const length = Math.floor(Math.random() * (1 + elements.length - 0)) + 0;
-        if (length === 0) {
-            return [];
-        }
-        return this.getRandomCombination(elements, length);
+        return length ? this.getRandomCombination(elements, length) : [];
     }
 
+    /**
+     * Get any random combination from the set of `elements`, given the `length`
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     * @param length Desired number of elements of the random combination
+     */
     static getRandomCombination<T>(elements: T[], length: number): T[] {
         this.validateLengthParameter(elements, length);
 
@@ -208,6 +287,14 @@ export default class Combinatorics {
         return elements.slice(0, length);
     }
 
+    /**
+     * Get any random permutation from the set of `elements`
+     * 
+     * @typeParam T Generic type for the param `elements`
+     * @param elements Array of elements, could be a mix of different types
+     * @param length Desired number of elements of the random permutation
+     * @param allowRepetitions Determines whether the desired random permutation shall allow repetitions or not
+     */
     static getRandomPermutation<T>(
         elements: T[],
         length: number = elements.length,

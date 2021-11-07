@@ -9,14 +9,12 @@ export default class Statistics {
 
     public static getSum<T>(elements: T[], numberConversionCallback: (a: T) => number = (a) => Number(a)): number {
         const numberELements = this.getNumberElements(elements, numberConversionCallback);
-        return numberELements.reduce((a, b) => a + b, 0);
+        return numberELements.reduce((runningTotal, value) => runningTotal + value, 0);
     }
 
     public static getMean<T>(elements: T[], numberConversionCallback: (a: T) => number = (a) => Number(a)): number {
-        const numberELements = this.getNumberElements(elements, numberConversionCallback);
-
-        if (numberELements.length) {
-            return this.getSum(numberELements) / numberELements.length;
+        if (elements.length) {
+            return this.getSum(numberELements, numberConversionCallback) / numberELements.length;
         }
         return NaN;
     }
