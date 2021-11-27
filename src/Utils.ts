@@ -2,14 +2,14 @@ export default class Utils {
     public static areArraysEqual<T>(
         arrayA: T[],
         arrayB: T[],
-        order: boolean = true,
+        ordered: boolean = true,
         equalityCallback: (valueA: T, valueB: T) => boolean = (valueA, valueB) => valueA === valueB,
     ): boolean {
         if (arrayA.length !== arrayB.length) {
             return false;
         }
 
-        if (order) {
+        if (ordered) {
             for (let i = 0; i < arrayA.length; i++) {
                 if (!equalityCallback(arrayA[i], arrayB[i])) {
                     return false;
